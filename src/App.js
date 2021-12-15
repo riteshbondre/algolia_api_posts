@@ -8,59 +8,44 @@ import ReactPagination from "react-paginate";
 
 function App() {
   const [posts, setPosts] = useState([]);
-  const items = [1, 2, 3, 4, 5, 6]
-  var a = []
-  let myAll = []
-  // let setData=[]
+  const [pg, setPg] = useState([]);
+
+  let s = 0;
   React.useEffect(() => {
-    console.log("ybl_oage1");
-    fetch(
-      `https://hn.algolia.com/api/v1/search_by_date?query=tags=story&page=0`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setPosts(data);
-      });
-  }, 1)
+    const interval = setInterval(() => {
 
-  const AddToLocal=()=>{
-    localStorage.setItem("all", JSON.stringify(posts))
-    // localStorage.setItem("a", JSON.stringify(a))
-  }
-  
-  localStorage.setItem("a", JSON.stringify(a))
-
-  const AddPage=()=>{
-    
-    
-    a = [JSON.parse(localStorage.getItem("all"))]
-    
-    a.push(posts)
-    localStorage.setItem("a", JSON.stringify(a))
-    console.log(a)
-  }
-  
+      setPg((s) = s + 1)
+      fetch(
+        `https://hn.algolia.com/api/v1/search_by_date?query=tags=story&page=${s}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          // console.log(data.hits)
+          setPosts((prevPosts) => {
+            return [data.hits, ...prevPosts]
+          });
+        })
+        .catch((error) => console.log(error));
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
 
-
-  const handleChange = (data) => {
-    console.log("changed page", data.selected)
-  }
 
   return (
     <div className="App">
       <div>App</div>
       <div className="App">
-        {Object.keys(posts).length !== 0 ? (
-          <div>
-            {posts?.hits.map((post, index) => {
-              return (
-                <div>
-                  <Card key={index} style={{ width: '40rem', alignItems: "center", justifyContent: 'center' }}>
+        {
+          // console.log(posts)
+          posts.map((post) => {
+            return post.map((ShowData,index) => {
+              console.log(index)
+              return <div>
+                <Card key={index} style={{ width: '40rem', alignItems: "center", justifyContent: 'center' }}>
                     <Table striped bordered hover >
                       <thead>
                         <tr>
-                          <th>id</th>
                           <th>Author</th>
                           <th>Date</th>
                           <th>Title</th>
@@ -68,41 +53,18 @@ function App() {
                       </thead>
                       <tbody>
                         <tr>
-                          <td>{index}</td>
-                          <td onClick={(e) => { console.log("event") }}>{post.author}</td>
-                          <td>{post.created_at}</td>
-                          <td>{post.title}</td>
+                          <td>{ShowData.author}</td>
+                          <td>{ShowData.created_at}</td>
+                          <td>{ShowData.title}</td>
                         </tr>
                       </tbody>
                     </Table>
                   </Card>
-                </div>
-
-              );
-            })}
-            <Pagination onClick={handleChange}>
-              <Pagination.Prev />
-              {items.map((items, index) => {
-                return (
-                  <div key={index}>
-                    <Pagination.Item>{items}</Pagination.Item>
-                  </div>
-                )
-              })
-
-              }
-
-
-              <Pagination.Next />
-            </Pagination>
-            {/* <ReactPagination pageRangeDisplayed={5} pageCount={items} previousLabel={'Next'} previousLabel={'Previous'} /> */}
-
-          </div>
-
-        ) : null}
+              </div>
+            })
+          })
+        } 
       </div>
-      <button onClick={AddToLocal}>add to local </button>
-      <button onClick={AddPage}>add</button>
     </div>
   );
 }
